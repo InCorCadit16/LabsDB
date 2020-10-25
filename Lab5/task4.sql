@@ -1,0 +1,74 @@
+--- Task 4
+BEGIN TRY 
+DECLARE @N1 INT, @N2 INT, @N3 INT;
+DECLARE @MAI_MARE INT;
+SET @N1 = 60 * RAND();
+SET @N2 = 60 * RAND();
+SET @N3 = 60 * RAND();
+
+
+IF @N1 = @N2 OR @N1 = @N3 OR @N2 = @N3
+	RAISERROR ('2 or 3 numbers has the same value', 12, 1)
+
+SET @MAI_MARE = CASE  
+					WHEN @N1 > @N2 AND @N1 > @N3 THEN @N1
+					WHEN @N2 > @N1 AND @N2 > @N3 THEN @N2
+					ELSE @N3
+				END 
+
+PRINT @N1;
+PRINT @N2;
+PRINT @N3;
+PRINT 'Mai mare = ' + CAST(@MAI_MARE AS VARCHAR(2));
+END TRY
+BEGIN CATCH
+	IF @@ERROR != 0
+		PRINT(ERROR_MESSAGE())
+		
+END CATCH
+
+
+BEGIN TRY
+USE universitatea;
+DECLARE @DATE TABLE(Nume_Student NVARCHAR(100), Prenume_Student NVARCHAR(100), Nota INT);
+
+INSERT INTO @DATE SELECT DISTINCT Nume_Student, Prenume_Student, Nota FROM dbo.studenti
+	INNER JOIN dbo.studenti_reusita ON studenti_reusita.Id_Student = studenti.Id_Student
+	INNER JOIN dbo.discipline ON discipline.Id_Disciplina = studenti_reusita.Id_Disciplina
+	WHERE Disciplina = 'Baze de date' AND Tip_Evaluare = 'Testul 1'
+
+DECLARE @COUNTER INT = 0;
+DECLARE @LEN INT;
+DECLARE @CURRENT_NOTA INT;	
+DECLARE @CURRENT_ROW TABLE(Nume_Student NVARCHAR(100), Prenume_Student NVARCHAR(100), Nota INT);
+DECLARE @RESULT TABLE(Nume_Student NVARCHAR(100), Prenume_Student NVARCHAR(100), Nota INT);
+
+SELECT @LEN = COUNT(*) FROM @DATE;
+
+	
+WHILE @COUNTER < @LEN
+	BEGIN
+	INSERT INTO @CURRENT_ROW SELECT * FROM @DATE ORDER BY Nume_Student OFFSET @COUNTER ROWS FETCH NEXT 1 ROW ONLY;
+	SELECT @CURRENT_NOTA = Nota FROM @CURRENT_ROW
+
+	IF @CURRENT_NOTA != 6 AND @CURRENT_NOTA != 8
+		INSERT INTO @RESULT SELECT * FROM @CURRENT_ROW
+
+	SET @COUNTER = @COUNTER + 1;
+	DELETE @CURRENT_ROW
+	END
+
+
+SELECT @LEN = COUNT(*) FROM @RESULT
+
+IF @LEN < 10
+	RAISERROR ('There are less then 10 rows in result', 12, 1)
+
+
+SELECT TOP(10) * FROM @RESULT
+END TRY
+BEGIN CATCH
+	IF @@ERROR != 0
+		PRINT(ERROR_MESSAGE())
+		
+END CATCH
