@@ -28,5 +28,5 @@ WHILE @COUNTER < @LEN
 	DELETE @CURRENT_ROW
 	END
 
-SELECT TOP(10) Nume_Student, Prenume_Student FROM @RESULT ORDER BY Nota DESC
+SELECT TOP(10) Nume_Student, Prenume_Student, Nota FROM @RESULT ORDER BY Nota DESC
 END
